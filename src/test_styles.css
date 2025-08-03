@@ -1,0 +1,21 @@
+// cypress/integration/css_responsive_spec.js
+describe('Responsive CSS', () => {
+    it('Navbar is sticky and visible on mobile', () => {
+        cy.viewport(375, 667); // iPhone 6/7/8
+        cy.visit('/');
+        cy.get('.navbar').should('be.visible');
+        cy.get('.navbar').should('have.css', 'position', 'sticky');
+    });
+
+    it('Posts grid collapses to single column on mobile', () => {
+        cy.viewport(375, 667);
+        cy.visit('/');
+        cy.get('.posts').should('have.css', 'display', 'block');
+    });
+
+    it('Posts grid is two columns on desktop', () => {
+        cy.viewport(1280, 800);
+        cy.visit('/');
+        cy.get('.posts').should('have.css', 'display', 'grid');
+    });
+});

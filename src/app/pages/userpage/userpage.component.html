@@ -1,0 +1,199 @@
+<!-- Modern Navbar -->
+<nav class="navbar">
+  <div class="navbar_container">
+    <a href="/" class="nav_header">
+      <h2 class="header" style="display:inline;vertical-align:middle;">UrbanPulse</h2>
+    </a>
+    <div class="nav_actions">
+      <div class="wide-nav">
+      <span class="user-greeting"><i class="fa-solid fa-user"></i> Hi, {{ myServices.currentUserFullName || 'User' }}</span>
+      <!-- Sign out icon for large screens -->
+      <button class="icon-btn signout-btn desktop-signout" (click)="myServices.signOut()" title="Sign Out">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+      </button>
+      </div>
+      <div class="hamburger" (click)="mobileMenuOpen = !mobileMenuOpen" [class.is-active]="mobileMenuOpen">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </div>
+    </div>
+  </div>
+  <!-- Mobile menu -->
+  <div class="mobile-menu" *ngIf="mobileMenuOpen">
+    <ul class="mobile-menu-contents">
+      <li class="menu-list"><i class="fa-solid fa-user"></i> Hi, {{ myServices.currentUserFullName || 'User' }}</li>
+      <li class="menu-list" (click)="myServices.openPostModal()"><i class="fa-solid fa-pen-to-square"></i> Write Post</li>
+      <li class="menu-list" (click)="myServices.signOut()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out</li>
+  </ul>
+  </div>
+</nav>
+
+<!-- Error Popup -->
+<div *ngIf="myServices.formError" class="popup-error" (mouseenter)="myServices.clearErrorTimeout()" (mouseleave)="myServices.startErrorTimeout()">
+    <i class="fa-solid fa-circle-exclamation"></i> {{ myServices.formError }}
+    <button class="popup-close" (click)="myServices.formError='';myServices.clearErrorTimeout()">
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+</div>
+
+<!-- Responsive container for hero and filters -->
+<div class="userpage-content">
+  <!-- User Hero/Title -->
+  <section class="user-hero">
+    <h1>
+      <i class="fa-solid fa-comments" style="color:#6366f1;margin-right:8px;"></i>
+      Welcome back, {{ myServices.currentUserFullName || 'User' }}!
+    </h1>
+    <p class="subtitle">
+      <i class="fa-solid fa-bullhorn" style="color:#7c3aed;margin-right:6px;"></i>
+      Share your thoughts, stories, and insights with the UrbanPulse community.
+    </p>
+    <button class="nav_button" (click)="myServices.openPostModal()">
+      <i class="fa-solid fa-pen-to-square"></i> Write Post
+    </button>
+  </section>
+
+  <!-- Filters -->
+  <section class="filters">
+    <input type="text" id="searchInput" [(ngModel)]="myServices.searchQuery" placeholder="Search posts..." />
+    <select id="categoryFilter" [(ngModel)]="myServices.selectedCategory">
+      <option value="all">--All Categories--</option>
+      <option value="tech">Tech</option>
+      <option value="lifestyle">Lifestyle</option>
+      <option value="crypto">Crypto</option>
+      <option value="family">Family</option>
+      <option value="business">Business</option>
+      <option value="sports">Sports</option>
+      <option value="gaming">Gaming</option>
+      <option value="health">Health</option>
+      <option value="travel">Travel</option>
+      <option value="education">Education</option>
+      <option value="entertainment">Entertainment</option>
+    </select>
+    <button class="search-btn" (click)="myServices.loadPosts()">
+      <i class="fa-solid fa-magnifying-glass"></i> Search
+    </button>
+  </section>
+</div>
+
+<!-- Post Modal (modern card style) -->
+<div class="modal-overlay" *ngIf="myServices.isPostModal">
+  <div class="modal-card">
+    <button class="close" (click)="myServices.closePostModal()" aria-label="Close">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+    <h2>
+      <i class="fa-solid fa-pen-to-square"></i>
+      {{ myServices.editId ? 'Edit Post' : 'Create Post' }}
+    </h2>
+    <form class="post_form" (ngSubmit)="myServices.savePost()" #Form="ngForm">
+      <label>Title</label>
+      <input type="text" [(ngModel)]="myServices.post.title" name="title" placeholder="Enter your post title..." required />
+
+      <label>Description</label>
+      <textarea name="description" [(ngModel)]="myServices.post.description" placeholder="Write your post content here..." required></textarea>
+
+      <label>Image <span style="font-size:0.9em;color:#888;">(Max 1MB, jpg/png/jpeg)</span></label>
+      <label class="image-upload-label">
+        <i class="fa-solid fa-upload"></i> Choose Image
+        <input type="file" accept="image/png, image/jpeg, image/jpg" (change)="myServices.handleImageUpload($event)" />
+      </label>
+      <span class="image-upload-filename" *ngIf="myServices.post.image && !myServices.imageError">Image selected</span>
+      <div *ngIf="myServices.imageError" class="error-msg">
+        <i class="fa-solid fa-circle-exclamation"></i> {{ myServices.imageError }}
+      </div>
+      <img *ngIf="myServices.post.image" [src]="myServices.post.image" alt="Preview" style="max-width: 80vw; margin: 10px 0; border-radius: 8px;"/>
+
+      <label>Category</label>
+      <select name="category" [(ngModel)]="myServices.post.category" required>
+        <option value="">--Select--</option>
+        <option value="tech">Tech</option>
+        <option value="lifestyle">Lifestyle</option>
+        <option value="crypto">Crypto</option>
+        <option value="family">Family</option>
+        <option value="business">Business</option>
+        <option value="sports">Sports</option>
+        <option value="gaming">Gaming</option>
+        <option value="health">Health</option>
+        <option value="travel">Travel</option>
+        <option value="education">Education</option>
+        <option value="entertainment">Entertainment</option>
+      </select>
+
+      <label>Tags</label>
+      <div class="tags-input">
+        <input type="text" [(ngModel)]="myServices.tagInput" name="tagInput" (keydown.enter)="myServices.addTag(); $event.preventDefault()" placeholder="Add tags..." />
+        <span class="tag-chip" *ngFor="let tag of myServices.selectedTags; let i = index">
+          <i class="fa-solid fa-hashtag"></i> {{ tag }} <i class="fa-solid fa-xmark" (click)="myServices.removeTag(i)"></i>
+        </span>
+      </div>
+
+      <button type="submit" class="submit-btn" id="postsubmit_button">
+        <i class="fa-solid fa-paper-plane"></i> {{ myServices.editId ? 'Update' : 'Publish' }}
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Posts List -->
+<div class="posts-cards-container">
+  <div *ngFor="let post of myServices.filteredPosts" class="post-card">
+    <div class="post-header">
+      <span class="avatar">{{ post.author.charAt(0) | uppercase }}</span>
+      <div class="post-meta">
+        <span class="author"><i class="fa-solid fa-user"></i> {{ post.author }}</span>
+        <span class="date"><i class="fa-solid fa-calendar"></i> {{ post.date }}</span>
+      </div>
+      <span class="category-badge"><i class="fa-solid fa-tag"></i> {{ post.category }}</span>
+    </div>
+    <img *ngIf="post.image" [src]="post.image" alt="Post image" class="post-image">
+    <h2 class="post-title"><i class="fa-solid fa-quote-left"></i> {{ post.title }}</h2>
+    <p class="post-description">{{ post.description | slice:0:80 }}<span *ngIf="post.description.length > 80">...</span></p>
+    <div class="post-tags">
+      <span class="tag-chip" *ngFor="let tag of post.tags">
+        <i class="fa-solid fa-hashtag"></i> {{ tag }}
+      </span>
+    </div>
+    <div class="post-actions">
+      <button *ngIf="post.author === myServices.currentUserFullName" class="icon-btn" (click)="myServices.editPost(post)">
+        <i class="fa-solid fa-pen"></i> Edit
+      </button>
+      <button *ngIf="post.author === myServices.currentUserFullName" class="icon-btn" (click)="myServices.deletePost(post.id)">
+        <i class="fa-solid fa-trash"></i> Delete
+      </button>
+      <button class="icon-btn" (click)="myServices.openViewModal(post)">
+        <i class="fa-solid fa-eye"></i> View
+      </button>
+    </div>
+  </div>
+  <div *ngIf="myServices.filteredPosts.length === 0" class="no-posts">
+    <i class="fa-regular fa-face-frown"></i> No posts found.
+  </div>
+</div>
+
+<!-- View Modal -->
+<div class="modal-overlay" *ngIf="myServices.isViewModal">
+  <div class="modal-card view-modal-card">
+    <button class="close" (click)="myServices.closeViewModal()" aria-label="Close">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+    <div class="view-modal-content">
+      <h2 class="view-modal-title"><i class="fa-solid fa-quote-left"></i> {{ myServices.post.title }}</h2>
+      <div class="view-modal-meta">
+        <span><i class="fa-solid fa-user"></i> {{ myServices.post.author }}</span>
+        <span><i class="fa-solid fa-calendar"></i> {{ myServices.post.date }}</span>
+        <span class="category-badge"><i class="fa-solid fa-tag"></i> {{ myServices.post.category }}</span>
+      </div>
+      <img *ngIf="myServices.post.image" [src]="myServices.post.image" alt="Post image" class="view-modal-image">
+      <p class="view-modal-description">{{ myServices.post.description }}</p>
+      <div class="post-tags" *ngIf="myServices.post.tags?.length">
+        <span class="tag-chip" *ngFor="let tag of myServices.post.tags">
+          <i class="fa-solid fa-hashtag"></i> {{ tag }}
+        </span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
